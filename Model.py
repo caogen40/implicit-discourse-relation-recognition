@@ -18,6 +18,7 @@ class DiscourseBert(nn.Module):
         if self.ensemble:
             self.ensemble_classifier = nn.Linear(int(self.output_dim / 3), 2)
         if config.order:
+            self.backbone2 = AutoModel.from_pretrained(config.backbone)
             self.classifier2 = nn.Sequential(nn.Linear(self.output_dim, 256), nn.Dropout(), nn.ReLU(), nn.Linear(256, 4)) if config.method == 'common' else nn.Linear(int(self.output_dim / 3), config.total_conn_num)
             self.final_classifier = nn.Linear(2 * config.total_conn_num if config.method == 'prompt' and config.label == 'label' else 8, 4)
 
@@ -41,7 +42,7 @@ class DiscourseBert(nn.Module):
             out = torch.mean(result.last_hidden_state, dim=1)
             out = self.classifier(out)
         if config.order:
-            result2 = self.backbone(input_ids=torch.cat((arg[0][config.max_length + 3:], arg[0][config.max_length:config.max_length + 3], arg[0][:config.max_length]), dim=0), attention_mask=torch.cat((arg[1][config.max_length + 3:], arg[1][config.max_length:config.max_length + 3], arg[1][:config.max_length]), dim=0))
+            result2 = self.backbone2(input_ids=torch.cat((arg[0][config.max_length + 3:], arg[0][config.max_length:config.max_length + 3], arg[0][:config.max_length]), dim=0), attention_mask=torch.cat((arg[1][config.max_length + 3:], arg[1][config.max_length:config.max_length + 3], arg[1][:config.max_length]), dim=0))
             if config.method == 'prompt':
                 out2 = result2.last_hidden_state[:, config.max_length:config.max_length + 3, :]
                 out2 = nn.AvgPool2d(kernel_size=(3, 3))(out2).squeeze(1)

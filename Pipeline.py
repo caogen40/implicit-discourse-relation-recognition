@@ -30,7 +30,7 @@ def epoch_task(epoch, dataloader, model, optimizer, criterion, model2, optimizer
             label, conn_idx, total_labels = batch[2].to(config.device), batch[4].to(config.device), batch[3]
             arg = (batch[0].to(config.device), batch[1].to(config.device))
         outputs = model(arg)
-        new_y_pred = torch.argmax(outputs[0] if config.order else outputs, dim=-1).cpu().numpy()
+        new_y_pred = torch.argmax(outputs, dim=-1).cpu().numpy()
         if config.label == 'conn':
             new_y_pred = torch.tensor([config.conn2class[config.idx2conn[i]] for i in new_y_pred])
         new_y_true = np.array([pred if pred in total_labels[idx] else total_labels[idx][0] for idx, pred in enumerate(new_y_pred)])
